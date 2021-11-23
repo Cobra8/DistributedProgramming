@@ -1,6 +1,5 @@
 defmodule Plug.CORS do
   @behaviour Plug
-  alias Plug.Cors
 
   def init([]), do: []
 

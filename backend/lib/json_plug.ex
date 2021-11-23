@@ -1,6 +1,5 @@
 defmodule Plug.JSON do
   @behaviour Plug
-  alias Plug.Json
 
   def init([]), do: []
 
