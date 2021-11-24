@@ -5,12 +5,16 @@ defmodule Backend.Router do
   alias Backend.History, as: History
 
   def start(identifier, name) do
-    Process.register(spawn(fn -> initialize(name) end), identifier)
+    try do
+      Process.register(spawn(fn -> initialize(name) end), identifier); { :ok }
+    rescue ex in ArgumentError -> { :error,  ex.message } end
   end
 
   def stop(identifier) do
-    send(identifier, :stop)
-    Process.unregister(identifier)
+    try do
+      send(identifier, :stop)
+      Process.unregister(identifier); { :ok }
+    rescue ex in ArgumentError -> { :error, ex.message } end
   end
 
   defp initialize(name) do
@@ -22,8 +26,14 @@ defmodule Backend.Router do
     router(name, interfaces, map, table, history, 1)
   end
 
-  def retrieve_status(pid) do
-    send(pid, { :status, self() })
+  def send_message(pid, message) do
+    try do
+      send(pid, message); { :ok }
+    rescue ex in ArgumentError -> { :error, ex.message } end
+  end
+  
+  def retrieve_status(pid, from \\ self()) do
+    send_message(pid, { :status, from })
   end
 
   defp router(name, interfaces, map, table, history, counter) do
@@ -91,7 +101,10 @@ defmodule Backend.Router do
       
       ###################### Other messages ######################
       { :status, from } ->
-        send(from, { :status, { name, interfaces, map, table, history, counter } })
+        simple_interfaces = Enum.map(interfaces, fn { name, _, pid } -> [ name, pid ] end)
+        simple_table = Enum.map(table, fn { gateway, target } -> [ gateway, target ] end)
+        send(from, { :status, { name, simple_interfaces, map, simple_table, history, counter } })
+
         router(name, interfaces, map, table, history, counter)
 
       :stop -> :ok 

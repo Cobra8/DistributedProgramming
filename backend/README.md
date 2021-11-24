@@ -15,8 +15,13 @@
 `mix test` to run all test  
 `mix test test/**/*_test.exs` to run a specific test file
 
+### Vulnerable towards DoS attacks
+
+Extensive use of String.to_atom() with unsafe user input making code vulnerable to simple DoS attacks
+
 ## Docs
 
+https://hexdocs.pm/elixir/1.12/Application.html  
 https://hexdocs.pm/elixir/1.12/IO.html  
 https://hexdocs.pm/elixir/1.12/List.html  
 https://hexdocs.pm/elixir/1.12/Map.html  

@@ -35,14 +35,15 @@ export const FrontendHeader: React.FC<FrontendHeaderProps> = ({}) => {
           </Heading>
         </NextLink>
 
-        <NextImage src="/react.png" alt="logo" height="75px" width="75px" />
+        <NextImage src="/react.svg" alt="logo" height="75px" width="75px" />
       </Flex>
 
       <Box backgroundColor="#D4F1F4" paddingY={1}>
         <Flex marginX="auto" maxWidth="1200px" justifyContent="right">
-          {menuItem("Home", "/")}
-          {menuItem("Ping", "/ping")}
-          {menuItem("Users", "/users")}
+          {menuItem("Overview", "/")}
+          {menuItem("Routers", "/routers")}
+          {menuItem("Interfaces", "/interfaces")}
+          {menuItem("Messages", "/messages")}
         </Flex>
       </Box>
     </Box>

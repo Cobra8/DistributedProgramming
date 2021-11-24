@@ -8,7 +8,7 @@ function Frontend({ Component, pageProps }: AppProps) {
     <ChakraProvider resetCSS theme={theme}>
       <Head>
         <title>Frontend - Concurret and Distributed Programming</title>
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" href="/react.svg" sizes="any" type="image/svg+xml" />
       </Head>
 
       <Component {...pageProps} />

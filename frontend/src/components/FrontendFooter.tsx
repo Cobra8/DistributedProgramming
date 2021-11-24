@@ -18,7 +18,7 @@ export const FrontendFooter: React.FC<FrontendFooterProps> = ({}) => {
           <Text marginTop={8}>Yannis Laaroussi & Lucas Bürgi</Text>
         </Box>
 
-        <NextImage src="/react.png" alt="logo" height="194px" width="194px" />
+        <NextImage src="/react.svg" alt="logo" height="194px" width="194px" />
       </Flex>
     </Box>
   );
