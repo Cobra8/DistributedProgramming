@@ -20,10 +20,11 @@ defmodule Backend.Dijkstra do
   end
   
   def table(gateways, map) do # create routing table from gateways and the map
-    initial = Enum.map(Map.all_nodes(map), fn (node) -> { node, :unknown, :inf } end)
-    sorted = List.foldl(gateways, initial, fn (gateway, acc) -> update(gateway, gateway, 0, acc) end)
+    initial_gateways = Enum.map(gateways, fn (gateway) -> { gateway, gateway, 1 } end) 
+    initial_map = Enum.map(Map.all_nodes(map), fn (node) -> { node, :unknown, :inf } end)
 
-    iterate(sorted, map, [])
+    sorted = List.keysort(initial_gateways ++ initial_map, 2) # could eliminate unusable junk from map here with Enum.uniq_by since list is sorted and uniq keeps the first element (but not necessary since we stop iterate on the first hit of a length of :inf)
+    iterate(sorted, map, []) # result is wrong in the sense that the entry for the executing node is not { :node, :node, 0 } instead some random entry => this does not matter since when routing a message and being on the destination we do not ask the dijkstra module ^^
   end
 
   def route(node, table) do # find to which node to route for node

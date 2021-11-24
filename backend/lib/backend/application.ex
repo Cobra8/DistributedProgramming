@@ -11,6 +11,7 @@ defmodule Backend.Application do
     Supervisor.start_link(children, options)
   end
 
+
   @impl true
   def stop(_) do
     Plug.Cowboy.shutdown TopLevelRouter.HTTP
