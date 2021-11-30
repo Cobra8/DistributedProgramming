@@ -101,8 +101,8 @@ defmodule Backend.Router do
       
       ###################### Other messages ######################
       { :status, from } ->
-        simple_interfaces = Enum.map(interfaces, fn { name, _, pid } -> [ name, pid ] end)
-        simple_table = Enum.map(table, fn { gateway, target } -> [ gateway, target ] end)
+        simple_interfaces = Enum.map(interfaces, fn { name, _, pid } -> %{ name: name, identifier: pid } end)
+        simple_table = Enum.map(table, fn { target, gateway } -> %{ target: target, gateway: gateway } end)
         send(from, { :status, { name, simple_interfaces, map, simple_table, history, counter } })
 
         router(name, interfaces, map, table, history, counter)

@@ -9,19 +9,19 @@ export const routersStart = async (values: { identifier: string; name: string })
   return await axios.post(__backend__ + "routers/start", values);
 };
 
-export const routersStop = async (values: { identifier: string; name: string }) => {
+export const routersStop = async (values: { identifier: string }) => {
   return await axios.post(__backend__ + "routers/stop", { identifier: values.identifier });
 };
 
-export const routersBroadcast = async (values: { identifier: string; name: string }) => {
+export const routersBroadcast = async (values: { identifier: string }) => {
   return await axios.get(__backend__ + "routers/broadcast/" + values.identifier);
 };
 
-export const routersUpdate = async (values: { identifier: string; name: string }) => {
+export const routersUpdate = async (values: { identifier: string }) => {
   return await axios.get(__backend__ + "routers/update/" + values.identifier);
 };
 
-export const routersStatus = async (values: { identifier: string; name: string }) => {
+export const routersStatus = async (values: { identifier: string }) => {
   return await axios.get(__backend__ + "routers/status/" + values.identifier);
 };
 

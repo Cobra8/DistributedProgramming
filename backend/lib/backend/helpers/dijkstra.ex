@@ -14,7 +14,7 @@ defmodule Backend.Dijkstra do
   defp iterate([ { _, _, :inf } | _ ], _, table) do table end
   defp iterate([ { node, gateway, length } | rest ], map, table) do
     reachable = Map.reachable(node, map)
-    new_rest = List.foldl(reachable, rest, fn (neighbour, acc) -> update(neighbour, node, length + 1, acc) end)
+    new_rest = List.foldl(reachable, rest, fn (neighbour, acc) -> update(neighbour, gateway, length + 1, acc) end)
 
     iterate(new_rest, map, [ { node, gateway } | table])
   end

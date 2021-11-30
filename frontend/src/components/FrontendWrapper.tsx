@@ -7,7 +7,7 @@ export const FrontendWrapper: React.FC<FrontendProps> = ({ siteTitle = "", varia
   return (
     <Box paddingX={5} marginTop={8} marginX="auto" maxWidth={variants[variant]} width="100%" minHeight="500px">
       <Box>
-        <Heading textAlign="center" fontSize="x-large" marginBottom={5}>
+        <Heading as="h2" size="lg" textAlign="center" marginBottom={5}>
           {siteTitle}
         </Heading>
       </Box>
