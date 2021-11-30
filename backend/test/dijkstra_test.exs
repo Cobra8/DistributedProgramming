@@ -5,7 +5,7 @@ defmodule DijkstraTest do
   alias Backend.Dijkstra, as: Dijkstra
 
   test "table creation" do
-    assert Dijkstra.table([:paris, :madrid], %{madrid: [:berlin], paris: [:rome, :madrid]}) == [berlin: :madrid, rome: :paris, madrid: :madrid, paris: :paris]
+    assert Dijkstra.table([:paris, :madrid], %{madrid: [:berlin], paris: [:rome, :madrid]}) == [paris: :paris, madrid: :madrid, rome: :paris, berlin: :madrid]
   end
 
   test "berlin route" do
@@ -24,4 +24,8 @@ defmodule DijkstraTest do
     assert Dijkstra.route(:amsterdam, Backend.Dijkstra.table([:paris, :madrid], %{madrid: [:berlin], paris: [:rome, :madrid]})) == { :notfound }
   end
 
+  test "triangle table" do
+    assert Dijkstra.table([:sidney, :london], %{oslo: [:sidney, :london], sidney: [:london]}) == [sidney: :sidney, london: :london]
+    assert Dijkstra.table([:london, :sidney], %{oslo: [:sidney, :london], sidney: [:london]}) == [london: :london, sidney: :sidney, london: :sidney]
+  end
 end

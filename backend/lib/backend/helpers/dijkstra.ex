@@ -10,8 +10,8 @@ defmodule Backend.Dijkstra do
     end
   end
 
-  defp iterate([], _, table) do table end
-  defp iterate([ { _, _, :inf } | _ ], _, table) do table end
+  defp iterate([], _, table) do Enum.reverse(table) end
+  defp iterate([ { _, _, :inf } | _ ], _, table) do Enum.reverse(table) end
   defp iterate([ { node, gateway, length } | rest ], map, table) do
     reachable = Map.reachable(node, map)
     new_rest = List.foldl(reachable, rest, fn (neighbour, acc) -> update(neighbour, gateway, length + 1, acc) end)

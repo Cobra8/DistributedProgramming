@@ -10,7 +10,7 @@ defmodule RouterTest do
 
     send(:first_router, { :add, :madrid, :second_router })
 
-    pid = spawn(fn -> test() end)
+    pid = spawn(fn -> receive_status() end)
 
     send(:first_router, { :status, pid }) # should contain the interface sent before
     send(:second_router, { :status, pid }) # should be empty
@@ -31,7 +31,7 @@ defmodule RouterTest do
     send(:third_router, { :add, :madrid, :fourth_router })
     send(:third_router, { :broadcast })
 
-    pid = spawn(fn -> test() end)
+    pid = spawn(fn -> receive_status() end)
     :timer.sleep(200)
 
     send(:third_router, { :status, pid }) # should contain the sent interface and links
@@ -53,7 +53,7 @@ defmodule RouterTest do
 
     send(:sixth_router, { :update })
 
-    pid = spawn(fn -> test() end)
+    pid = spawn(fn -> receive_status() end)
     :timer.sleep(200)
 
     send(:fifth_router, { :status, pid }) # should have an entry in it's table that routes a packet 
@@ -78,7 +78,7 @@ defmodule RouterTest do
 
     Enum.each([ :router_a, :router_b, :router_c ], fn router -> send(router, { :update }) end)
 
-    pid = spawn(fn -> test() end)
+    pid = spawn(fn -> receive_status() end)
     :timer.sleep(500)
 
     Enum.each([ :router_a, :router_b, :router_c ], fn router -> send(router, { :status, pid }) end)
@@ -112,12 +112,11 @@ defmodule RouterTest do
   end
 
   
-  defp test() do
+  defp receive_status() do
     receive do
       { :status, { name, interfaces, map, table, history, counter } } -> 
-        # IO.inspect { name, interfaces, map, table, history, counter }
         IO.inspect { name, interfaces, map, table, history, counter }
-        test()
+        receive_status()
     end
   end
 

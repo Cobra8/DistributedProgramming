@@ -8,7 +8,7 @@
 
 `export BACKEND_PORT=8081`  
 `export FRONTEND_HOST=http://localhost:8080`  
-`mix -S iex` to run the compiled files in an interactive Elixir shell
+`iex -S mix` to run the compiled files in an interactive Elixir shell
 
 ## Unit tests
 

@@ -24,6 +24,7 @@ import {
   routersStatus,
   routersStop,
   routersUpdate,
+  sendMessage,
 } from "../requests";
 
 const FrontendForceGraph = NextDynamic(() => import("../components/FrontendForceGraph"), {
@@ -31,13 +32,13 @@ const FrontendForceGraph = NextDynamic(() => import("../components/FrontendForce
 });
 
 const Index = () => {
-  // const [routers, setRouters] = useState([] as string[]);
   const [routers, setRouters] = useState([] as string[]);
   const [routerData, setRouterData] = useState([] as Router[]);
   const [selected, setSelected] = useState({ type: Selectable.NONE } as Selected);
   const [linking, setLinking] = useState(false);
 
-  const { isOpen: isRouterModal, onOpen: newRouter, onClose: closeRouterModal } = useDisclosure();
+  const { isOpen: isRouterModal, onOpen: newRouterModal, onClose: closeRouterModal } = useDisclosure();
+  const { isOpen: isMessageModal, onOpen: sendMessageModal, onClose: closeMessageModal } = useDisclosure();
 
   useEffect(() => {
     status();
@@ -119,6 +120,39 @@ const Index = () => {
         </ModalContent>
       </Modal>
 
+      <Modal isOpen={isMessageModal} onClose={closeMessageModal} motionPreset="slideInBottom">
+        <ModalOverlay />
+        <ModalContent top="10vh">
+          <ModalHeader>Send a message</ModalHeader>
+          <ModalCloseButton />
+
+          <Formik
+            initialValues={{ target: "", message: "" }}
+            onSubmit={async (values) => {
+              await sendMessage({ src_identifier: selected.id, dst_name: values.target, message: values.message });
+              closeMessageModal();
+            }}
+          >
+            {(props) => (
+              <Form>
+                <ModalBody>
+                  <InputField name="target" label="Target:" />
+                  <InputField name="message" label="Message:" />
+                </ModalBody>
+                <ModalFooter>
+                  <Button type="submit" isLoading={props.isSubmitting} colorScheme="green" marginRight={4}>
+                    Send
+                  </Button>
+                  <Button colorScheme="red" variant="ghost" onClick={closeMessageModal}>
+                    Cancel
+                  </Button>
+                </ModalFooter>
+              </Form>
+            )}
+          </Formik>
+        </ModalContent>
+      </Modal>
+
       <Frontend siteTitle="Overview" variant="wide">
         <Box marginBottom={6}>
           Welcome to the frontend page of our project for the concurrent and distributed programming course
@@ -162,7 +196,10 @@ const Index = () => {
                     <Heading as="h6" size="sm" marginBottom={2} borderBottom="1px solid lightgray">
                       Selected:
                     </Heading>
-                    <Box>{readableSelected(selected)}</Box>
+                    <Box marginBottom={2}>{readableSelected(selected)}</Box>
+                    <Button colorScheme="cyan" marginBottom={2} onClick={() => sendMessageModal()}>
+                      Send message from {selected.name}
+                    </Button>
                   </Box>
                 )}
                 <Box marginBottom={4}>
@@ -172,7 +209,7 @@ const Index = () => {
                   <Button
                     onClick={(event) => {
                       event.stopPropagation();
-                      newRouter();
+                      newRouterModal();
                     }}
                     colorScheme="green"
                     marginBottom={2}
