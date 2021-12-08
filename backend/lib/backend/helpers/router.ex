@@ -39,7 +39,6 @@ defmodule Backend.Router do
   defp router(name, interfaces, map, table, history, counter) do
     receive do
       ###################### Interface messages ######################
-
       { :add, interface, pid } ->
         ref = Process.monitor(pid)
         new_interfaces = Interfaces.add(interface, ref, pid, interfaces)
@@ -78,25 +77,40 @@ defmodule Backend.Router do
         router(name, interfaces, map, new_table, history, counter)
 
       ###################### Routing messages ######################
-      { :route, ^name, from, message } -> # message arrived at destination (using ^ pin operator to pattern match on name!)
-        IO.puts("#{name}: received message \"#{message}\" from #{from}")
+      { :route, ^name, from, trace, message } -> # message arrived at destination (using ^ pin operator to pattern match on name)
+        if is_pid(from) do 
+          IO.puts("#{name}: message \"#{message}\" reached destination, sending trace to origin")
+          send(from, { :trace, Enum.reverse([ name | trace ]) })
+        else IO.puts("#{name}: received message \"#{message}\" from #{from}") end
+
         router(name, interfaces, map, table, history, counter)
       
-      { :route, to, from, message } ->
+      { :route, to, from, trace, message } ->
         case Dijkstra.route(to, table) do
           { :ok, gateway } -> 
             case Interfaces.pid(gateway, interfaces) do
               { :ok, pid } -> 
-                IO.puts("#{name}: routing message \"#{message}\" with destination #{to} to next hop #{gateway} (initial sender is #{from})")
-                send(pid, { :route, to, from, message })
-              { :notfound } -> :ok
+                IO.puts("#{name}: routing message \"#{message}\" with destination #{to} to next hop #{gateway}")
+                send(pid, { :route, to, from, [ name | trace ], message })
+
+              { :notfound } ->
+                IO.puts("#{name}: found gateway \"#{gateway}\" but do not have an interface to send to!")
+                send(from, { :error, "#{name}: found gateway \"#{gateway}\" but do not have an interface to send to!" })
+
             end
-          { :notfound } -> :ok
+          { :notfound } -> 
+            IO.puts("#{name}: did not find a gateway for target \"#{to}\"!")
+            send(from, { :error, "#{name}: did not find a gateway for target \"#{to}\"!" })
+
         end
         router(name, interfaces, map, table, history, counter)
 
       { :send, to, message } ->
-        send(self(), { :route, to, name, message })
+        send(self(), { :route, to, name, [], message })
+        router(name, interfaces, map, table, history, counter)
+
+      { :trace, to, from, message } ->
+        send(self(), { :route, to, from, [], message })
         router(name, interfaces, map, table, history, counter)
       
       ###################### Other messages ######################

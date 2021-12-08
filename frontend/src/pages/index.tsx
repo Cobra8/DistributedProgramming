@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertIcon, AlertTitle } from "@chakra-ui/alert";
 import { Button } from "@chakra-ui/button";
 import { useDisclosure } from "@chakra-ui/hooks";
 import { Box, Flex, Heading } from "@chakra-ui/layout";
@@ -10,12 +11,13 @@ import {
   ModalHeader,
   ModalOverlay,
 } from "@chakra-ui/modal";
+import { CloseButton } from "@chakra-ui/react";
 import { Form, Formik } from "formik";
 import NextDynamic from "next/dynamic";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Frontend } from "../components/Frontend";
 import { InputField } from "../components/InputField";
-import { Router, Selectable, Selected } from "../constants";
+import { AlertMessage, INCREMENT_PAUSE, Router, Selectable, Selected } from "../constants";
 import {
   interfacesAdd,
   interfacesRemove,
@@ -24,11 +26,11 @@ import {
   routersStatus,
   routersStop,
   routersUpdate,
-  sendMessage,
+  traceMessage,
 } from "../requests";
 
 const FrontendForceGraph = NextDynamic(() => import("../components/FrontendForceGraph"), {
-  ssr: false, // to make sure the ForceGraph library is compiled and rendered in the browser and not on the server!
+  ssr: false, // to make sure the ForceGraph library is compiled and rendered in the browser and not on the server! (it relies on document / window which is only available in there)
 });
 
 const Index = () => {
@@ -37,29 +39,11 @@ const Index = () => {
   const [selected, setSelected] = useState({ type: Selectable.NONE } as Selected);
   const [linking, setLinking] = useState(false);
 
+  const [trace, setTrace] = useState([] as string[]);
+  const [alertMessage, setAlertMessage] = useState(null as AlertMessage);
+
   const { isOpen: isRouterModal, onOpen: newRouterModal, onClose: closeRouterModal } = useDisclosure();
   const { isOpen: isMessageModal, onOpen: sendMessageModal, onClose: closeMessageModal } = useDisclosure();
-
-  useEffect(() => {
-    status();
-  }, [routers]); // use routers as dependency, meaning that this effect is only called when the routers state changed
-
-  // do not break memoization by creating a new different function on every render, instead with the useCallback hook we only create a new function when the value of linking changes
-  const selectCallback = useCallback(
-    async (newSelected: Selected) => {
-      if (linking && newSelected.type === Selectable.ROUTER) {
-        await interfacesAdd({
-          src_identifier: selected.id,
-          dst_identifier: newSelected.id,
-          dst_name: newSelected.name,
-        });
-        await status();
-      }
-      setLinking(false);
-      setSelected(newSelected);
-    },
-    [linking]
-  );
 
   const status = async () => {
     setRouterData(
@@ -83,6 +67,20 @@ const Index = () => {
     await Promise.all(routers.map(async (identifier) => await routersUpdate({ identifier })));
     status();
   };
+
+  useEffect(() => {
+    status();
+  }, [routers]); // use routers as dependency, meaning that this effect is only called when the routers state changed
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTrace([]);
+    }, Math.max(10000, trace.length * INCREMENT_PAUSE * 2));
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [trace]);
 
   return (
     <>
@@ -129,7 +127,21 @@ const Index = () => {
           <Formik
             initialValues={{ target: "", message: "" }}
             onSubmit={async (values) => {
-              await sendMessage({ src_identifier: selected.id, dst_name: values.target, message: values.message });
+              const response = await traceMessage({
+                src_identifier: selected.id,
+                dst_name: values.target,
+                message: values.message,
+              });
+              if (response.status !== 200) {
+                setAlertMessage({ status: "warning", title: "Backend error!", message: response.data.error });
+              } else {
+                setTrace(response.data.trace);
+                setAlertMessage({
+                  status: "success",
+                  title: "Found shortest path: ",
+                  message: response.data.trace.join(", "),
+                });
+              }
               closeMessageModal();
             }}
           >
@@ -162,13 +174,37 @@ const Index = () => {
           Visualization
         </Heading>
 
+        {alertMessage && (
+          <Alert status={alertMessage.status} borderRadius={6} marginY={4}>
+            <AlertIcon />
+            <AlertTitle mr={2}>{alertMessage.title}</AlertTitle>
+            <AlertDescription>{alertMessage.message}</AlertDescription>
+            <CloseButton position="absolute" right="8px" top="8px" onClick={() => setAlertMessage(null)} />
+          </Alert>
+        )}
+
         <Flex flexDirection="row">
           <Box width="75%" paddingRight={5}>
             <Box
               border="1px solid #D4F1F4"
               boxShadow="rgba(172, 236, 242, 0.4) -10px 10px, rgba(172, 236, 242, 0.3) -20px 20px, rgba(172, 236, 242, 0.2) -30px 30px, rgba(172, 236, 242, 0.1) -40px 40px"
             >
-              <FrontendForceGraph data={routerData} onSelect={selectCallback} />
+              <FrontendForceGraph
+                data={routerData}
+                trace={trace}
+                onSelect={async (newSelected: Selected) => {
+                  if (linking && newSelected.type === Selectable.ROUTER) {
+                    await interfacesAdd({
+                      src_identifier: selected.id,
+                      dst_identifier: newSelected.id,
+                      dst_name: newSelected.name,
+                    });
+                    await status();
+                  }
+                  setLinking(false);
+                  setSelected(newSelected);
+                }}
+              />
             </Box>
           </Box>
           <Box width="25%" paddingLeft={5} borderLeft="1px solid black">
@@ -197,9 +233,11 @@ const Index = () => {
                       Selected:
                     </Heading>
                     <Box marginBottom={2}>{readableSelected(selected)}</Box>
-                    <Button colorScheme="cyan" marginBottom={2} onClick={() => sendMessageModal()}>
-                      Send message from {selected.name}
-                    </Button>
+                    {selected.type === Selectable.ROUTER && (
+                      <Button colorScheme="cyan" marginTop={2} onClick={() => sendMessageModal()}>
+                        Send message from {selected.name}
+                      </Button>
+                    )}
                   </Box>
                 )}
                 <Box marginBottom={4}>
@@ -288,6 +326,13 @@ const Index = () => {
                     >
                       Setup test network
                     </Button>
+                    <Button
+                      colorScheme="gray"
+                      marginBottom={2}
+                      onClick={async () => setRouters(await generateTestNetwork())}
+                    >
+                      Generate larger network
+                    </Button>
                     <Button colorScheme="gray" marginBottom={2} onClick={() => setRouters([])}>
                       Clear network
                     </Button>
@@ -337,6 +382,45 @@ const setupTestNetwork = async () => {
   await interfacesAdd({ src_identifier: "router_f", dst_identifier: "router_g", dst_name: "Sidney" });
   await interfacesAdd({ src_identifier: "router_g", dst_identifier: "router_a", dst_name: "London" });
   await interfacesAdd({ src_identifier: "router_a", dst_identifier: "router_b", dst_name: "Amsterdam" });
+};
+
+const generateTestNetwork = async (): Promise<string[]> => {
+  const routers: Router[] = [];
+
+  for (let i = 0; i < 30; i++) {
+    const router: Router = {
+      identifier: "router_" + i,
+      name: (Math.random() + 1).toString(36).substring(6),
+      interfaces: [],
+      table: [],
+    };
+    await routersStart(router);
+
+    if (i < 5) {
+      routers.push(router);
+      continue;
+    }
+
+    for (let others = 0; others < Math.random() * 5; others++) {
+      let otherRouter = routers.at(Math.random() * routers.length)!;
+      if (router.interfaces.findIndex((intf) => intf.name === otherRouter.name) === -1) {
+        router.interfaces = [...router.interfaces, { identifier: otherRouter.identifier, name: otherRouter.name }];
+        otherRouter.interfaces = [...otherRouter.interfaces, { identifier: router.identifier, name: router.name }];
+        await interfacesAdd({
+          src_identifier: router.identifier,
+          dst_identifier: otherRouter.identifier,
+          dst_name: otherRouter.name,
+        });
+        await interfacesAdd({
+          src_identifier: otherRouter.identifier,
+          dst_identifier: router.identifier,
+          dst_name: router.name,
+        });
+      }
+    }
+    routers.push(router);
+  }
+  return routers.map((router) => router.identifier);
 };
 
 export default Index;

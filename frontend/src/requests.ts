@@ -41,3 +41,7 @@ export const interfacesRemove = async (values: { src_identifier: string; dst_nam
 export const sendMessage = async (values: { src_identifier: string; dst_name: string; message: string }) => {
   return await axios.post(__backend__ + "messages/send", values);
 };
+
+export const traceMessage = async (values: { src_identifier: string; dst_name: string; message: string }) => {
+  return await axios.post(__backend__ + "messages/trace", values);
+};

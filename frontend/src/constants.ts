@@ -4,6 +4,9 @@ export const __backend__ = process.env.NEXT_PUBLIC_BACKEND_URL
   ? process.env.NEXT_PUBLIC_BACKEND_URL
   : "http://localhost:8081/";
 
+export const NODE_REL = 4;
+export const INCREMENT_PAUSE = 500;
+
 export type Interface = {
   name: string;
   identifier: string;
@@ -31,3 +34,9 @@ export type Selected = {
   type: Selectable;
   [key: string]: any;
 };
+
+export type AlertMessage = {
+  status: "error" | "success" | "warning" | "info";
+  title: string;
+  message: string;
+} | null;
