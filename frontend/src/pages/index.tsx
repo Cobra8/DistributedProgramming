@@ -387,21 +387,21 @@ const setupTestNetwork = async () => {
 const generateTestNetwork = async (): Promise<string[]> => {
   const routers: Router[] = [];
 
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 15; i++) {
     const router: Router = {
       identifier: "router_" + i,
-      name: (Math.random() + 1).toString(36).substring(6),
+      name: "city_" + i,
       interfaces: [],
       table: [],
     };
     await routersStart(router);
 
-    if (i < 5) {
+    if (i < 3) {
       routers.push(router);
       continue;
     }
 
-    for (let others = 0; others < Math.random() * 5; others++) {
+    for (let others = 0; others < Math.random() * 2; others++) {
       let otherRouter = routers.at(Math.random() * routers.length)!;
       if (router.interfaces.findIndex((intf) => intf.name === otherRouter.name) === -1) {
         router.interfaces = [...router.interfaces, { identifier: otherRouter.identifier, name: otherRouter.name }];

@@ -9,7 +9,7 @@ defmodule Plug.CORS do
   import Plug.Conn
 
   def defaults do
-    [ 
+    [
       origin: Application.get_env(:backend, :frontend_host, "http://localhost:8080"),
       credentials: true,
       headers: [
@@ -28,7 +28,7 @@ defmodule Plug.CORS do
   end
 
   def init(options) do
-    defaults() 
+    defaults()
       |> Keyword.merge(options)
       |> Keyword.update!(:methods, &Enum.join(&1, ",")) # & capture function (captures the function and makes it usable as an anonymous function argument)
   end
@@ -42,17 +42,17 @@ defmodule Plug.CORS do
     end
   end
 
-  
+
   defp headers(conn = %Plug.Conn{method: "OPTIONS"}, options) do # headers specific to OPTIONS request
     headers(%{conn | method: nil}, options) ++ [
       { "access-control-allow-headers", Enum.join(options[:headers], ",") } ,
-      { "access-control-allow-methods", options[:methods] } 
-      
+      { "access-control-allow-methods", options[:methods] }
+
     ]
   end
 
-  defp headers(conn, options) do # unviversal headers for all requests
-    [ 
+  defp headers(_, options) do # unviversal headers for all requests
+    [
       { "access-control-allow-origin", options[:origin] },
       { "access-control-allow-credentials", "#{options[:credentials]}" }
     ]
