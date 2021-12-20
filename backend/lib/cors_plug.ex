@@ -47,7 +47,6 @@ defmodule Plug.CORS do
     headers(%{conn | method: nil}, options) ++ [
       { "access-control-allow-headers", Enum.join(options[:headers], ",") } ,
       { "access-control-allow-methods", options[:methods] }
-
     ]
   end
 

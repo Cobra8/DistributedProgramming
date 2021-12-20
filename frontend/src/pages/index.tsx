@@ -70,7 +70,7 @@ const Index = () => {
 
   useEffect(() => {
     status();
-  }, [routers]); // use routers as dependency, meaning that this effect is only called when the routers state changed
+  }, [routers]); // use routers as dependency, meaning that this effect is only called when the routers state changes
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -5,9 +5,7 @@ defmodule Backend.Dijkstra do
     { _, _, current } = List.keyfind(sorted, node, 0, { 0, 0, 0 }) # find tuple where key at 0 matches node => List.keyfind(list, key, pos, default)
     if n <= current do
       List.keysort(List.keyreplace(sorted, node, 0, { node, gateway, n }), 2) # replace key at pos 0 (node name) if existing and sort by key at pos 2 (hop length)
-    else
-      sorted
-    end
+    else sorted end
   end
 
   defp iterate([], _, table) do Enum.reverse(table) end
